@@ -8,6 +8,7 @@ class Dataset:
         self.ImageCount = imageCount
         self.Dataset = None
         self.DatasetDir = datasetDirectory
+        self.IsLoaded = False
 
         if self.DatasetDir[0] == '/':
             self.DatasetDir = self.DatasetDir[1:]
@@ -47,3 +48,5 @@ class Dataset:
             # add images to array
             self.Dataset[0].append(rgbImg)
             self.Dataset[1].append(normalImg)
+
+        self.IsLoaded = True
