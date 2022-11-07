@@ -39,12 +39,15 @@ class Dataset:
         for f in selectedFiles:
             # load rgb first
             path = os.path.join(self.RGBPath, f)
-            rgbImg = cv2.imload(path)
+            rgbImg = cv2.imread(path)
             rgbImg = cv2.cvtColor(rgbImg, cv2.COLOR_BGR2RGB)
             # load normal next
             path = os.path.join(self.NormalPath, f)
-            normalImg = cv2.imload(path)
+            normalImg = cv2.imread(path)
             normalImg = cv2.cvtColor(normalImg, cv2.COLOR_BGR2RGB)
+            # normalise
+            rgbImg /= 255
+            normalImg /= 255
             # add images to array
             self.Dataset[0].append(rgbImg)
             self.Dataset[1].append(normalImg)
