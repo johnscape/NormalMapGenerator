@@ -1,6 +1,7 @@
 import os.path
 import random
 import cv2
+import numpy as np
 
 
 class Dataset:
@@ -46,6 +47,9 @@ class Dataset:
             normalImg = cv2.imread(path)
             normalImg = cv2.cvtColor(normalImg, cv2.COLOR_BGR2RGB)
             # normalise
+            rgbImg = np.asarray(rgbImg, dtype=np.float32)
+            normalImg = np.asarray(normalImg, dtype=np.float32)
+
             rgbImg /= 255
             normalImg /= 255
             # add images to array
