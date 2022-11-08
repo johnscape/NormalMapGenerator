@@ -1,14 +1,15 @@
 import math
-import os.path
+import os
 import cv2
+import shutil
 
 
 class ImageProcessor:
-    def __init__(self, rgbBath: str = "/rgb", normalPath: str = "/normal", datasetDir: str = "/work", verbose: int = 0):
+    def __init__(self, rgbBath: str = "/rgb", normalPath: str = "/normal", datasetDir: str = "/work"):
         self.RGBPath = rgbBath
         self.NormalPath = normalPath
         self.DatasetDirectory = datasetDir
-        self.Verbose = verbose  # 0 - none, 1 - low, 2 - high
+        self.Verbose = 0  # 0 - none, 1 - low, 2 - high
 
         if self.RGBPath[0] == '/':
             self.RGBPath = self.RGBPath[1:]
@@ -48,15 +49,34 @@ class ImageProcessor:
                 return False
         return True
 
-    def ProcessImages(self, windowSize: int = 32, windowStep: int = 2):
+    def ProcessImages(self, windowSize: int = 32, windowStep: int = 2, eraseExisting: bool = True):
         if not self.CreateMissingFolder(os.path.join(self.TrainingPath, "rgb")): return
         if not self.CreateMissingFolder(os.path.join(self.TrainingPath, "normal")): return
 
         if not self.CreateMissingFolder(os.path.join(self.TestingPath, "rgb")): return
         if not self.CreateMissingFolder(os.path.join(self.TestingPath, "normal")): return
 
+        if eraseExisting:
+            self.ClearAllData()
+
         rgb_files = [f for f in os.listdir(self.RGBPath) if os.path.isfile(os.path.join(self.RGBPath, f))]
         normal_files = [f for f in os.listdir(self.NormalPath) if os.path.isfile(os.path.join(self.NormalPath, f))]
+
+        # check for same
+        for rgb in rgb_files:
+            for n in normal_files:
+                if rgb == n:
+                    break
+            else:
+                print("No match for " + str(rgb) + " found! removing it from the list!")
+                rgb_files.remove(rgb)
+        for n in normal_files:
+            for rgb in rgb_files:
+                if rgb == n:
+                    break
+            else:
+                print("No match for " + str(n) + " found! removing it from the list!")
+                normal_files.remove(n)
 
         if self.Verbose == 2:
             print("Tiling RGB images...")
@@ -134,3 +154,35 @@ class ImageProcessor:
             count += 1
             if count >= numberOfCopies:
                 break
+
+    def ClearAllData(self):
+        testingDir = os.path.join(self.DatasetDirectory, "testing")
+        trainingDir = os.path.join(self.DatasetDirectory, "training")
+
+        if self.IsDirectoryValid(testingDir):
+            rgbDir = os.path.join(testingDir, "rgb")
+            normalDir = os.path.join(testingDir, "normal")
+            if self.IsDirectoryValid(rgbDir):
+                self.ClearFolder(rgbDir)
+            if self.IsDirectoryValid(normalDir):
+                self.ClearFolder(normalDir)
+        if self.IsDirectoryValid(trainingDir):
+            rgbDir = os.path.join(trainingDir, "rgb")
+            normalDir = os.path.join(trainingDir, "normal")
+            if self.IsDirectoryValid(rgbDir):
+                self.ClearFolder(rgbDir)
+            if self.IsDirectoryValid(normalDir):
+                self.ClearFolder(normalDir)
+
+    @staticmethod
+    def ClearFolder(path: str):
+        for filename in os.listdir(path):
+            file_path = os.path.join(path, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
+
