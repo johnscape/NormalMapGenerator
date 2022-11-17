@@ -3,6 +3,26 @@ import math
 import os
 import cv2
 import shutil
+import numpy as np
+
+
+def SplitImage(image: np.ndarray, shift: int, windowSize: int) -> np.ndarray:
+    if image.shape[0] != image.shape[1]:
+        raise ValueError("The input image must have the same width and height!")
+    if len(image.shape) != 3:
+        raise ValueError("The input image must have 3 dimensions. Got " + str(len(image.shape)) + " instead.")
+    if windowSize > image.shape[0]:
+        raise ValueError("The input image is smaller then the used window.")
+
+    outputSize = int(((image.shape[0] - windowSize) / shift) + 1)
+    parts = []
+    for y in range(outputSize):
+        for x in range(outputSize):
+            part = image[x * shift: x * shift + windowSize, y * shift: y * shift + windowSize, :]
+            parts.append(part)
+
+    parts = np.asarray(parts)
+    return parts
 
 
 class ImageProcessor:
@@ -102,21 +122,12 @@ class ImageProcessor:
         if img.shape[0] % windowSize != 0 or img.shape[1] % windowSize != 0:
             raise ValueError(fileName + " cannot be tiled with " + str(windowSize) + "!")
 
-        count = 0
-        x = 0
-        while x < img.shape[0] - windowSize:
-            y = 0
-            while y < img.shape[1] - windowSize:
-                part = img[x:x + windowSize, y:y + windowSize, :]
-
-                path = str(imgNumber).zfill(2) + "_" + str(count).zfill(4) + ".png"
-                path = os.path.join(savePath, path)
-
-                cv2.imwrite(path, part)
-
-                count += 1
-                y += windowStep
-            x += windowStep
+        parts = SplitImage(img, windowSize, windowStep)
+        for i in range(parts.shape[0]):
+            save = parts[i, :, :, :].reshape((windowSize, windowSize, 3))
+            path = str(imgNumber).zfill(2) + "_" + str(i).zfill(5) + ".png"
+            path = os.path.join(savePath, path)
+            cv2.imwrite(path, save)
 
     def CreateTestingSet(self, percent: float = 0.2):
         rgbTrainingPath = os.path.join(self.TrainingPath, "rgb")
