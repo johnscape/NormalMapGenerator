@@ -20,11 +20,6 @@ class NormalGeneratorNetwork:
         self.Model = None  # type: keras.Model
         self.TrainingEpochs = 200
 
-        if self.TrainingDataset is None:
-            self.TrainingDataset = Dataset(self.WorkingDirectory, 1000, True, True)
-        if self.TestingDataset is None:
-            self.TestingDataset = Dataset(self.WorkingDirectory, 100, True, False)
-
     def CreateModel(self):
         inputImg = Input(shape=(self.ImageSize, self.ImageSize, 3))
 
