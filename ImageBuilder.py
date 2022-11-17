@@ -57,6 +57,8 @@ class ImageBuilder:
 
     def SaveImage(self, image: np.ndarray, name: str):
         cv2.imwrite(os.path.join(self.WorkDir, name), image)
+        cv2.imwrite(os.path.join(self.WorkDir, "expected_full_" + str(self.ImageSize) + ".png"), self.ExpectedImage)
+        cv2.imwrite(os.path.join(self.WorkDir, "input_rgb_" + str(self.ImageSize) + ".png"), self.InputImage)
 
     def PredictParts(self, parts: np.ndarray):
         return self.Network.Predict(parts)
