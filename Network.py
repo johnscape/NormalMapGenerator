@@ -13,7 +13,7 @@ class NormalGeneratorNetwork:
 
     def __init__(self, datasetDirectory: str, imageSize: int, trainingSet: Dataset = None, testingSet: Dataset = None):
         self.WorkingDirectory = datasetDirectory
-        self.ModelPath = os.path.join(datasetDirectory, "model")
+        self.ModelPath = os.path.join(datasetDirectory, "model_" + str(imageSize))
         self.ImageSize = imageSize
         self.TrainingDataset = trainingSet
         self.TestingDataset = testingSet
@@ -46,6 +46,11 @@ class NormalGeneratorNetwork:
         return os.path.isfile(self.ModelPath)
 
     def Train(self):
+        if self.TrainingDataset is None:
+            self.TrainingDataset = Dataset(self.WorkingDirectory, 1000, True, True)
+        if self.TestingDataset is None:
+            self.TestingDataset = Dataset(self.WorkingDirectory, 100, True, False)
+
         if not self.TrainingDataset.IsLoaded:
             self.TrainingDataset.Load()
         if not self.TestingDataset.IsLoaded:
@@ -75,13 +80,16 @@ class NormalGeneratorNetwork:
 
         # plotting the loss
         losses = history.history["loss"]
+        valLosses = history.history["val_loss"]
         epochs = np.arange(0, self.TrainingEpochs)
         fig = plt.figure()
         plt.ion()
-        plt.plot(epochs, losses)
+        plt.plot(epochs, losses, '-b', label="Epoch loss")
+        plt.plot(epochs, valLosses, '-g', label="Epoch evaluation loss")
         plt.title("Loss with image size of " + str(self.ImageSize))
         plt.xlabel("Epochs")
         plt.ylabel("Loss")
+        plt.legend(loc="upper left")
         plt.ioff()
         plt.savefig(os.path.join(self.WorkingDirectory, "loss_" + str(self.ImageSize) + ".png"))
 
