@@ -52,8 +52,33 @@ class ImageBuilder:
 
         return np.asarray(parts)
 
-    def RebuildImage(self, parts):
-        pass
+    def RebuildImage(self, parts: np.ndarray, windowed: bool = False):
+        newImage = np.zeros((self.InputImage.shape[0], self.InputImage.shape[1], 3))
+        shift = self.ImageSize
+        if windowed:
+            shift = 2
+        steps = int(self.InputImage.shape[0] / shift)
+
+        for x in range(steps):
+            for y in range(steps):
+                xStart = x * shift
+                xEnd = (x + 1) * shift
+                yStart = y * shift
+                yEnd = (y + 1) * shift
+                selectedPart = y * steps + x
+                selectedPart = parts[selectedPart, :, :, :].reshape((self.ImageSize, self.ImageSize, 3))
+                if (x == 0 and y == 0) or not windowed:
+                    newImage[xStart:xEnd, yStart:yEnd, :] = selectedPart
+                elif y == 0:
+                    newImage[xEnd - shift: xEnd, yStart:yEnd, :] = selectedPart[selectedPart.shape[0] - shift:, :]
+                else:
+                    newImage[xEnd - shift: xEnd, yEnd - shift:yEnd, :] = selectedPart[
+                                                                         selectedPart.shape[0] - shift:,
+                                                                         selectedPart.shape[1] - shift:]
+
+        newImage = np.round(newImage * 255, decimals=0).astype('uint8')
+        newImage = cv2.cvtColor(newImage, cv2.COLOR_RGB2BGR)
+        return newImage
 
     def SaveImage(self, image: np.ndarray, name: str):
         cv2.imwrite(os.path.join(self.WorkDir, name), image)

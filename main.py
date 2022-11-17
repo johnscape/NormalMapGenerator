@@ -9,8 +9,8 @@ from ImageBuilder import ImageBuilder
 import logging
 
 logging.basicConfig(filename='log.txt', level=logging.DEBUG)
+imageSizes = [16, 32, 64, 128, 256, 512]
 
-imageSizes = [16, 32, 64, 128]
 
 for imageSize in imageSizes:
     logging.info("Starting new round with image size " + str(imageSize))
