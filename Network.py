@@ -38,7 +38,7 @@ class NormalGeneratorNetwork:
         self.Model = generator
 
     def IsModelExists(self) -> bool:
-        return os.path.isfile(self.ModelPath)
+        return os.path.isdir(self.ModelPath)
 
     def Train(self):
         if self.TrainingDataset is None:
