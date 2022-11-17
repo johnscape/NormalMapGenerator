@@ -1,3 +1,4 @@
+import logging
 import os.path
 import random
 import cv2
@@ -28,6 +29,7 @@ class Dataset:
             self.Load()
 
     def Load(self):
+        logging.info("Loading dataset of " + str(self.ImageCount) + " images")
         files = [f for f in os.listdir(self.RGBPath) if os.path.isfile(os.path.join(self.RGBPath, f))]
         selectedFiles = []
 
@@ -57,3 +59,4 @@ class Dataset:
             self.Dataset[1].append(normalImg)
 
         self.IsLoaded = True
+        logging.info("Dataset loaded!")

@@ -1,3 +1,4 @@
+import logging
 import math
 import os
 import cv2
@@ -9,7 +10,6 @@ class ImageProcessor:
         self.RGBPath = rgbBath
         self.NormalPath = normalPath
         self.DatasetDirectory = datasetDir
-        self.Verbose = 0  # 0 - none, 1 - low, 2 - high
 
         if self.RGBPath[0] == '/':
             self.RGBPath = self.RGBPath[1:]
@@ -39,13 +39,12 @@ class ImageProcessor:
     def CreateMissingFolder(self, path: str) -> bool:
         if not self.IsDirectoryValid(path):
             try:
-                if self.Verbose == 2:
-                    print("Creating folder at " + path)
+                logging.debug("Creating folder at " + path)
                 realPath = os.path.join(os.getcwd(), path)
                 os.mkdir(realPath)
                 return True
             except OSError as e:
-                print(e)
+                logging.error(e)
                 return False
         return True
 
@@ -68,30 +67,27 @@ class ImageProcessor:
                 if rgb == n:
                     break
             else:
-                print("No match for " + str(rgb) + " found! removing it from the list!")
+                logging.error("No match for " + str(rgb) + " found! removing it from the list!")
                 rgb_files.remove(rgb)
         for n in normal_files:
             for rgb in rgb_files:
                 if rgb == n:
                     break
             else:
-                print("No match for " + str(n) + " found! removing it from the list!")
+                logging.error("No match for " + str(n) + " found! removing it from the list!")
                 normal_files.remove(n)
-
-        if self.Verbose == 2:
-            print("Tiling RGB images...")
+        logging.info("Beginning of image processing")
+        logging.debug("Tiling RGB images...")
         count = 1
         for f in rgb_files:
             self.CreateTiledImage(windowSize, windowStep, os.path.join(self.RGBPath, f), False, count)
             count += 1
-        if self.Verbose == 2:
-            print("Tiling normal images...")
+        logging.debug("Tiling normal images...")
         count = 1
         for f in normal_files:
             self.CreateTiledImage(windowSize, windowStep, os.path.join(self.NormalPath, f), True, count)
             count += 1
-        if self.Verbose >= 1:
-            print("Image processing done!")
+        logging.info("Image processing done!")
 
     def CreateTiledImage(self, windowSize: int, windowStep: int, fileName: str, isNormal: bool, imgNumber: int):
         img = cv2.imread(fileName)
@@ -156,6 +152,7 @@ class ImageProcessor:
                 break
 
     def ClearAllData(self):
+        logging.debug("Clearing existing data")
         testingDir = os.path.join(self.DatasetDirectory, "testing")
         trainingDir = os.path.join(self.DatasetDirectory, "training")
 

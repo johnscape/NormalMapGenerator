@@ -1,3 +1,4 @@
+import logging
 import os.path
 import random
 
@@ -20,9 +21,13 @@ class ImageBuilder:
             self.WorkDir = self.WorkDir[1:]
 
     def GenerateImage(self):
+        logging.info("Generating full normal map!")
         self.SelectRandomImage()
         parts = self.SplitImage()
         predicted = self.PredictParts(parts)
+        rebuilt = self.RebuildImage(predicted)
+        self.SaveImage(rebuilt, "built_" + str(self.ImageSize) + ".png")
+        logging.info("Normal map generation is finished!")
 
     def SelectRandomImage(self):
         rgb_files = [f for f in os.listdir(self.RGBPath) if os.path.isfile(os.path.join(self.RGBPath, f))]
