@@ -5,8 +5,19 @@ import random
 import cv2
 import numpy as np
 from Network import NormalGeneratorNetwork
-from Dataset import Dataset
+from ImageProcessor import SplitImage
 
+def PartCount(imageSize: int, windowSize: int, shiftSize: int) -> int:
+    count = 0
+    xPos = 0
+    while xPos + windowSize <= imageSize:
+        yPos = 0
+        while yPos + windowSize <= imageSize:
+            count += 1
+            yPos += shiftSize
+        xPos += shiftSize
+
+    return count
 
 class ImageBuilder:
     def __init__(self, workDir: str, network: NormalGeneratorNetwork, imageSize: int):
@@ -19,14 +30,22 @@ class ImageBuilder:
         self.ExpectedImage = None
         if self.WorkDir[0] == '/':
             self.WorkDir = self.WorkDir[1:]
+        self.WindowShiftSize = 4
 
     def GenerateImage(self):
         logging.info("Generating full normal map!")
         self.SelectRandomImage()
-        parts = self.SplitImage()
+        # full tiling
+        parts = SplitImage(self.InputImage, self.ImageSize, self.ImageSize).astype('float64')
+        parts /= 255
         predicted = self.PredictParts(parts)
-        rebuilt = self.RebuildImage(predicted)
-        self.SaveImage(rebuilt, "built_" + str(self.ImageSize) + ".png")
+        rebuilt = self.BuildTiledImage(predicted)
+        self.SaveImage(rebuilt, "built_tiled_" + str(self.ImageSize) + ".png")
+        # windowed tiling
+        shifts = [8, 16, 32, 64]
+        for s in shifts:
+            continue
+
         logging.info("Normal map generation is finished!")
 
     def SelectRandomImage(self):
@@ -38,26 +57,16 @@ class ImageBuilder:
 
         self.InputImage = cv2.cvtColor(self.InputImage, cv2.COLOR_BGR2RGB)
 
-    def SplitImage(self):
-        parts = []
-        x = 0
-        while x < self.InputImage.shape[0] - self.ImageSize:
-            y = 0
-            while y < self.InputImage.shape[1] - self.ImageSize:
-                part = np.asarray(self.InputImage[x:x + self.ImageSize, y:y + self.ImageSize, :]).astype('float32') / 255
-                parts.append(part)
+        while self.InputImage.shape[0] > 1024:
+            dim = (int(self.InputImage.shape[0] / 2), int(self.InputImage.shape[1] / 2))
+            self.InputImage = cv2.resize(self.InputImage, dim, interpolation=cv2.INTER_AREA)
+            self.ExpectedImage = cv2.resize(self.ExpectedImage, dim, interpolation=cv2.INTER_AREA)
 
-                y += self.ImageSize
-            x += self.ImageSize
-
-        return np.asarray(parts)
-
-    def RebuildImage(self, parts: np.ndarray, windowed: bool = False):
+    def BuildTiledImage(self, parts: np.ndarray):
         newImage = np.zeros((self.InputImage.shape[0], self.InputImage.shape[1], 3))
         shift = self.ImageSize
-        if windowed:
-            shift = 2
-        steps = int(self.InputImage.shape[0] / shift)
+        steps = int(((self.InputImage.shape[0] - self.ImageSize) / shift) + 1)
+        count = 0
 
         for x in range(steps):
             for y in range(steps):
@@ -66,24 +75,24 @@ class ImageBuilder:
                 yStart = y * shift
                 yEnd = (y + 1) * shift
                 selectedPart = y * steps + x
-                selectedPart = parts[selectedPart, :, :, :].reshape((self.ImageSize, self.ImageSize, 3))
-                if (x == 0 and y == 0) or not windowed:
-                    newImage[xStart:xEnd, yStart:yEnd, :] = selectedPart
-                elif y == 0:
-                    newImage[xEnd - shift: xEnd, yStart:yEnd, :] = selectedPart[selectedPart.shape[0] - shift:, :]
-                else:
-                    newImage[xEnd - shift: xEnd, yEnd - shift:yEnd, :] = selectedPart[
-                                                                         selectedPart.shape[0] - shift:,
-                                                                         selectedPart.shape[1] - shift:]
+                selectedPart = parts[count, :, :, :].reshape((self.ImageSize, self.ImageSize, 3))
+                count += 1
+                newImage[xStart:xEnd, yStart:yEnd, :] = selectedPart
 
         newImage = np.round(newImage * 255, decimals=0).astype('uint8')
         newImage = cv2.cvtColor(newImage, cv2.COLOR_RGB2BGR)
         return newImage
 
+    def BuildShiftedImage(self, shift: int) -> np.ndarray:
+        newImage = np.zeros((self.InputImage.shape[0], self.InputImage.shape[1], 3))
+
+        return newImage
+
     def SaveImage(self, image: np.ndarray, name: str):
-        cv2.imwrite(os.path.join(self.WorkDir, name), image)
-        cv2.imwrite(os.path.join(self.WorkDir, "expected_full_" + str(self.ImageSize) + ".png"), self.ExpectedImage)
-        cv2.imwrite(os.path.join(self.WorkDir, "input_rgb_" + str(self.ImageSize) + ".png"), self.InputImage)
+        path = os.path.join(self.WorkDir, "result_" + str(self.ImageSize))
+        cv2.imwrite(os.path.join(path, name), image)
+        cv2.imwrite(os.path.join(path, "expected_full_" + str(self.ImageSize) + ".png"), self.ExpectedImage)
+        cv2.imwrite(os.path.join(path, "input_rgb_" + str(self.ImageSize) + ".png"), self.InputImage)
 
     def PredictParts(self, parts: np.ndarray):
         return self.Network.Predict(parts)
