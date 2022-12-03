@@ -6,7 +6,7 @@ import shutil
 import numpy as np
 
 
-def SplitImage(image: np.ndarray, shift: int, windowSize: int) -> np.ndarray:
+def SplitImage(image: np.ndarray, shift: int, windowSize: int, maxCount: int = 0, skip: int = 0) -> np.ndarray:
     if image.shape[0] != image.shape[1]:
         raise ValueError("The input image must have the same width and height!")
     if len(image.shape) != 3:
@@ -14,12 +14,22 @@ def SplitImage(image: np.ndarray, shift: int, windowSize: int) -> np.ndarray:
     if windowSize > image.shape[0]:
         raise ValueError("The input image is smaller then the used window.")
 
-    outputSize = int(((image.shape[0] - windowSize) / shift) + 1)
     parts = []
-    for y in range(outputSize):
-        for x in range(outputSize):
-            part = image[x * shift: x * shift + windowSize, y * shift: y * shift + windowSize, :]
-            parts.append(part)
+    xPos = 0
+    while xPos + windowSize <= image.shape[0]:
+        yPos = 0
+        while yPos + windowSize <= image.shape[1]:
+            if skip == 0:
+                part = image[xPos:xPos + windowSize, yPos:yPos + windowSize, :]
+                parts.append(part)
+            else:
+                skip -= 1
+            yPos += shift
+            if 0 < maxCount <= len(parts):
+                break
+        xPos += shift
+        if 0 < maxCount <= len(parts):
+            break
 
     parts = np.asarray(parts)
     return parts
@@ -74,6 +84,8 @@ class ImageProcessor:
 
         if not self.CreateMissingFolder(os.path.join(self.TestingPath, "rgb")): return
         if not self.CreateMissingFolder(os.path.join(self.TestingPath, "normal")): return
+
+        if not self.CreateMissingFolder(os.path.join(self.DatasetDirectory, "result_" + str(windowSize))): return
 
         if eraseExisting:
             self.ClearAllData()
