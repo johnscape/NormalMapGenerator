@@ -3,7 +3,7 @@ import os.path
 import random
 import cv2
 import numpy as np
-
+from tqdm import tqdm
 
 class Dataset:
     def __init__(self, datasetDirectory: str, imageCount: int = 1000, loadOnInit: bool = False, training: bool = True):
@@ -35,11 +35,13 @@ class Dataset:
 
         while len(selectedFiles) < self.ImageCount:
             selection = random.choice(files)
-            if selection not in selectedFiles:
-                selectedFiles.append(selection)
+            #if selection not in selectedFiles:
+            selectedFiles.append(selection)
+        logging.debug("Files selected for loading")
 
         self.Dataset = [[], []]
-        for f in selectedFiles:
+        for i in tqdm(range(len(selectedFiles))):
+            f = selectedFiles[i]
             # load rgb first
             path = os.path.join(self.RGBPath, f)
             rgbImg = cv2.imread(path)
