@@ -1,3 +1,4 @@
+import os.path
 import random
 
 import numpy as np
@@ -8,7 +9,11 @@ from Network import NormalGeneratorNetwork
 from ImageBuilder import ImageBuilder
 import logging
 
-logging.basicConfig(filename='log.txt', level=logging.DEBUG)
+logging.basicConfig(
+    filename='log.txt',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    level=logging.DEBUG)
+
 imageSizes = [16, 32, 64, 128, 256, 512]
 
 
@@ -35,12 +40,18 @@ for imageSize in imageSizes:
     expectedImage = np.round(expectedImage * 255, decimals=0).astype('uint8')
     generatedImage = np.round(generatedImage * 255, decimals=0).astype('uint8')
 
-    cv2.imwrite("work/rgb_" + str(imageSize) + ".png", cv2.cvtColor(inputImage, cv2.COLOR_RGB2BGR))
-    cv2.imwrite("work/normal_" + str(imageSize) + ".png", cv2.cvtColor(expectedImage, cv2.COLOR_RGB2BGR))
-    cv2.imwrite("work/generated_" + str(imageSize) + ".png", cv2.cvtColor(generatedImage, cv2.COLOR_RGB2BGR))
+    path = os.path.join("work", "result_" + str(imageSize))
+    cv2.imwrite(os.path.join(path, "rgb_" + str(imageSize) + ".png"), inputImage)
+    cv2.imwrite(os.path.join(path, "normal_" + str(imageSize) + ".png"), expectedImage)
+    cv2.imwrite(os.path.join(path, "generated_" + str(imageSize) + ".png"), generatedImage)
 
     logging.info("Test images saved!")
 
+    processor = None
+    trainingDataset = None
+    testingDataset = None
+
     builder = ImageBuilder("work", network, imageSize)
     builder.GenerateImage()
+    builder = None
     logging.info("Round finished!")
