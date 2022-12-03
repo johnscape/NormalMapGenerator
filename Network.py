@@ -86,7 +86,9 @@ class NormalGeneratorNetwork:
         plt.ylabel("Loss")
         plt.legend(loc="upper left")
         plt.ioff()
-        plt.savefig(os.path.join(self.WorkingDirectory, "loss_" + str(self.ImageSize) + ".png"))
+        path = os.path.join(self.WorkingDirectory, "result_" + str(self.ImageSize))
+        path = os.path.join(path, "loss_" + str(self.ImageSize) + ".png")
+        plt.savefig(path)
 
     def Predict(self, image: np.ndarray):
         self.PrepareModel()
