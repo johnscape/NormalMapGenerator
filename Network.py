@@ -90,10 +90,10 @@ class NormalGeneratorNetwork:
         path = os.path.join(path, "loss_" + str(self.ImageSize) + ".png")
         plt.savefig(path)
 
-    def Predict(self, image: np.ndarray):
+    def Predict(self, image: np.ndarray, verbose: bool = True):
         self.PrepareModel()
-
-        result = self.Model.predict(image)
+        v = 0 if verbose is False else 1
+        result = self.Model.predict(image, verbose=v)
         return result
 
     def SaveModel(self, overwrite: bool = False):
