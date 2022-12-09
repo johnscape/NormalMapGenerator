@@ -29,12 +29,7 @@ for imageSize in imageSizes:
     network = NormalGeneratorNetwork("work", imageSize, trainingDataset, testingDataset)
     network.CreateModel()
     network.Train()
-
-    imageNumber = random.randint(0, len(testingDataset.Dataset[0]))
-    inputImage = np.asarray(testingDataset.Dataset[0][imageNumber])
-    expectedImage = np.asarray(testingDataset.Dataset[1][imageNumber])
-    generatedImage = network.Predict(inputImage.reshape((1, imageSize, imageSize, 3))).reshape(
-        (imageSize, imageSize, 3))
+    #network.LoadModel()
 
 
     processor = None
