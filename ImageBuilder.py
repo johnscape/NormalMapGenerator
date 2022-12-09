@@ -55,8 +55,6 @@ class ImageBuilder:
         self.InputImage = cv2.imread(os.path.join(self.RGBPath, selectedImage))
         self.ExpectedImage = cv2.imread(os.path.join(self.NormalPath, selectedImage))
 
-        self.InputImage = cv2.cvtColor(self.InputImage, cv2.COLOR_BGR2RGB)
-
         while self.InputImage.shape[0] > 1024:
             dim = (int(self.InputImage.shape[0] / 2), int(self.InputImage.shape[1] / 2))
             self.InputImage = cv2.resize(self.InputImage, dim, interpolation=cv2.INTER_AREA)
@@ -95,4 +93,4 @@ class ImageBuilder:
         cv2.imwrite(os.path.join(path, "input_rgb_" + str(self.ImageSize) + ".png"), self.InputImage)
 
     def PredictParts(self, parts: np.ndarray):
-        return self.Network.Predict(parts)
+        return self.Network.Predict(parts, False)
