@@ -83,7 +83,6 @@ class ImageBuilder:
                 newImage[xStart:xEnd, yStart:yEnd, :] = selectedPart
 
         newImage = np.round(newImage * 255, decimals=0).astype('uint8')
-        newImage = cv2.cvtColor(newImage, cv2.COLOR_RGB2BGR)
         return newImage
 
     def BuildShiftedImage(self, shift: int) -> np.ndarray:
