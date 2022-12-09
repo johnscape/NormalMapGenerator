@@ -17,7 +17,6 @@ logging.basicConfig(
 
 imageSizes = [16, 32, 64, 128, 256, 512]
 
-
 for imageSize in imageSizes:
     logging.info("Starting new round with image size " + str(imageSize))
     processor = ImageProcessor()
@@ -37,16 +36,6 @@ for imageSize in imageSizes:
     generatedImage = network.Predict(inputImage.reshape((1, imageSize, imageSize, 3))).reshape(
         (imageSize, imageSize, 3))
 
-    inputImage = np.round(inputImage * 255, decimals=0).astype('uint8')
-    expectedImage = np.round(expectedImage * 255, decimals=0).astype('uint8')
-    generatedImage = np.round(generatedImage * 255, decimals=0).astype('uint8')
-
-    path = os.path.join("work", "result_" + str(imageSize))
-    cv2.imwrite(os.path.join(path, "rgb_" + str(imageSize) + ".png"), inputImage)
-    cv2.imwrite(os.path.join(path, "normal_" + str(imageSize) + ".png"), expectedImage)
-    cv2.imwrite(os.path.join(path, "generated_" + str(imageSize) + ".png"), generatedImage)
-
-    logging.info("Test images saved!")
 
     processor = None
     trainingDataset = None
