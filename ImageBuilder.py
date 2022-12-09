@@ -117,5 +117,19 @@ class ImageBuilder:
         cv2.imwrite(os.path.join(path, "expected_full_" + str(self.ImageSize) + ".png"), self.ExpectedImage)
         cv2.imwrite(os.path.join(path, "input_rgb_" + str(self.ImageSize) + ".png"), self.InputImage)
 
+    def BuildSinglePicture(self, filePath: str):
+        self.InputImage = cv2.imread(filePath)
+        while self.InputImage.shape[0] > 1024:
+            dim = (int(self.InputImage.shape[0] / 2), int(self.InputImage.shape[1] / 2))
+            self.InputImage = cv2.resize(self.InputImage, dim, interpolation=cv2.INTER_AREA)
+
+        parts = SplitImage(self.InputImage, self.ImageSize, self.ImageSize).astype('float64')
+        parts /= 255
+
+        predicted = self.PredictParts(parts)
+        rebuilt = self.BuildTiledImage(predicted)
+
+        cv2.imwrite("generated_normal.png", rebuilt)
+
     def PredictParts(self, parts: np.ndarray):
         return self.Network.Predict(parts, False)
