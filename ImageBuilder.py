@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 from Network import NormalGeneratorNetwork
 from ImageProcessor import SplitImage
+from tqdm import tqdm
 
 def PartCount(imageSize: int, windowSize: int, shiftSize: int) -> int:
     count = 0
@@ -44,7 +45,11 @@ class ImageBuilder:
         # windowed tiling
         shifts = [8, 16, 32, 64]
         for s in shifts:
-            continue
+            if s >= self.ImageSize:
+                continue
+            logging.debug("Building shifted image with shift {0}".format(s))
+            shifted = self.BuildShiftedImage(s)
+            self.SaveImage(shifted, "built_shifted_" + str(self.ImageSize) + "_" + str(s) + ".png")
 
         logging.info("Normal map generation is finished!")
 
@@ -83,7 +88,28 @@ class ImageBuilder:
 
     def BuildShiftedImage(self, shift: int) -> np.ndarray:
         newImage = np.zeros((self.InputImage.shape[0], self.InputImage.shape[1], 3))
-
+        step_count = int((self.InputImage.shape[0] - self.ImageSize) / shift) + 1
+        for cols in tqdm(range(step_count)):
+            parts = []
+            for rows in range(step_count):
+                part = self.InputImage[
+                       cols * shift: cols * shift + self.ImageSize,
+                       rows * shift : rows * shift + self.ImageSize,
+                       :]
+                parts.append(part)
+            parts = np.asarray(parts).astype('float64')
+            parts /= 255
+            predicted = self.PredictParts(parts)
+            parts = 0
+            for rows in range(step_count):
+                current_part = predicted[parts, :, :, :].reshape((self.ImageSize, self.ImageSize, 3))
+                newImage[
+                    cols * shift : cols * shift + self.ImageSize,
+                    rows * shift : rows * shift + self.ImageSize,
+                    :
+                ] = current_part
+                parts += 1
+        newImage = np.round(newImage * 255, decimals=0).astype('uint8')
         return newImage
 
     def SaveImage(self, image: np.ndarray, name: str):
