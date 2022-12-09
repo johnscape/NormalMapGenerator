@@ -45,11 +45,9 @@ class Dataset:
             # load rgb first
             path = os.path.join(self.RGBPath, f)
             rgbImg = cv2.imread(path)
-            rgbImg = cv2.cvtColor(rgbImg, cv2.COLOR_BGR2RGB)
             # load normal next
             path = os.path.join(self.NormalPath, f)
             normalImg = cv2.imread(path)
-            normalImg = cv2.cvtColor(normalImg, cv2.COLOR_BGR2RGB)
             # normalise
             rgbImg = np.asarray(rgbImg, dtype=np.float32)
             normalImg = np.asarray(normalImg, dtype=np.float32)
