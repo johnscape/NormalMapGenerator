@@ -31,7 +31,7 @@ class NormalGeneratorNetwork:
         self.TrainingDataset = trainingSet
         self.TestingDataset = testingSet
         self.Model = None  # type: keras.Model
-        self.TrainingEpochs = 200
+        self.TrainingEpochs = 100
 
     def CreateModel(self):
         inputImg = Input(shape=(self.ImageSize, self.ImageSize, 3))
