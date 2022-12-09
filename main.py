@@ -18,15 +18,21 @@ def dir_path(string):
     else:
         raise NotADirectoryError(string)
 
-def DemoCycle(workdir: str, rgbDir: str, normalDir: str):
+def DemoCycle(workdir: str, rgbDir: str, normalDir: str, maxImageCount: int):
     imageSizes = [16, 32, 64, 128, 256]
 
     for imageSize in imageSizes:
-        if imageSize < 256:
-            continue
         logging.info("Starting new round with image size " + str(imageSize))
-        processor = ImageProcessor(rgbDir, normalDir, workdir)
-        processor.ProcessImages(imageSize, imageSize)
+        processor = ImageProcessor(rgbDir, normalDir, workdir, maxImageCount)
+        if imageSize == 16 or imageSize == 32:
+            stepSize = imageSize
+        elif imageSize == 64:
+            stepSize = 64
+        elif imageSize == 128:
+            stepSize = 32
+        else:
+            stepSize = 16
+        processor.ProcessImages(imageSize, stepSize)
         processor.CreateTestingSet()
 
         trainingDataset = Dataset(workdir, 1000, True, True)
@@ -57,6 +63,7 @@ parser.add_argument("-w", "--workdir", type=dir_path, default="work", help="Set 
 parser.add_argument("-r", "--rgb", type=dir_path, default="rgb", help="Set the path to the RGB files")
 parser.add_argument("-n", "--normal", type=dir_path, default="normal", help="Set the path to the normal maps")
 parser.add_argument("-l", "--log", type=file_path, default="log.txt", help="The path to the logfile")
+parser.add_argument("-m", "--max_images", type=int, default=10000, help="The maximum amount of training images to create")
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -68,7 +75,7 @@ if __name__ == "__main__":
         level=logging.DEBUG)
 
     if args.demo:
-        DemoCycle(args.workdir, args.rgb, args.normal)
+        DemoCycle(args.workdir, args.rgb, args.normal, args.max_images)
     elif args.file is not None:
         generatorNetwork = NormalGeneratorNetwork(args.workdir, args.size)
         if not generatorNetwork.IsModelExists():

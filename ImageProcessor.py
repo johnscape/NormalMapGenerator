@@ -36,10 +36,11 @@ def SplitImage(image: np.ndarray, shift: int, windowSize: int, maxCount: int = 0
 
 
 class ImageProcessor:
-    def __init__(self, rgbBath: str = "/rgb", normalPath: str = "/normal", datasetDir: str = "/work"):
+    def __init__(self, rgbBath: str = "/rgb", normalPath: str = "/normal", datasetDir: str = "/work", maxCount: int = 0):
         self.RGBPath = rgbBath
         self.NormalPath = normalPath
         self.DatasetDirectory = datasetDir
+        self.MaxCount = maxCount
 
         if self.RGBPath[0] == '/':
             self.RGBPath = self.RGBPath[1:]
@@ -134,8 +135,13 @@ class ImageProcessor:
         if img.shape[0] % windowSize != 0 or img.shape[1] % windowSize != 0:
             raise ValueError(fileName + " cannot be tiled with " + str(windowSize) + "!")
 
-        parts = SplitImage(img, windowSize, windowStep)
+        parts = SplitImage(img, windowStep, windowSize)
         for i in range(parts.shape[0]):
+            existingImageCount = len(
+                [name for name in os.listdir(savePath,) if os.path.isfile(os.path.join(savePath, name))]
+            )
+            if existingImageCount >= self.MaxCount > 0:
+                break
             save = parts[i, :, :, :].reshape((windowSize, windowSize, 3))
             path = str(imgNumber).zfill(2) + "_" + str(i).zfill(5) + ".png"
             path = os.path.join(savePath, path)
